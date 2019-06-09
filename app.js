@@ -33,3 +33,37 @@ app.post('/updateStatus',urlencodedParser,(req,res)=>{
         res.json({status : "success"});
     })
 })
+app.post('/setWarning',urlencodedParser,(req,res)=>{
+    console.log(req.body);
+    let sql ='UPDATE warning SET value=' +req.body.value ;
+    console.log(sql);
+    statusDb.query(sql,(err,response)=>{
+        if (err) throw err 
+        res.json({status : "success"});
+    })
+})
+app.get('/getListPower', (req,res)=> {
+    let now = new Date();
+    now.setHours(0);
+    now.setMilliseconds(0);
+    now.setMinutes(0);
+    now.setSeconds(0);
+   
+    let sql = 'SELECT * FROM power WHERE day >=' + now.getTime();
+    console.log(sql);  
+
+    statusDb.query(sql,(err,response)=>{
+        if (err) throw err;
+        console.log(response)
+        res.json(response);
+    })  
+})
+app.get('/getOneListPower',urlencodedParser,(req,res)=>{
+    let time= req.body.time;
+    let next= time + 86400;
+    let sql = 'SELECT * FROM power WHERE day>=' +time + ' AND day <='+next ;
+    statusDb.query(sql , (err ,response)=> {
+        if (err) throw err ;
+        res.json(response);
+    })
+})
