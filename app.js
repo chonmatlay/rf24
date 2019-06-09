@@ -25,9 +25,7 @@ app.get('/getWarningValue',(req,res)=>{
     })
 })
 app.post('/updateStatus',urlencodedParser,(req,res)=>{
-    console.log(req.body);
     let sql ='UPDATE status SET status=' +req.body.status +' WHERE id=' +req.body.id;
-    console.log(sql);
     statusDb.query(sql,(err,response)=>{
         if (err) throw err 
         res.json({status : "success"});
@@ -36,7 +34,6 @@ app.post('/updateStatus',urlencodedParser,(req,res)=>{
 app.post('/setWarning',urlencodedParser,(req,res)=>{
     console.log(req.body);
     let sql ='UPDATE warning SET value=' +req.body.value ;
-    console.log(sql);
     statusDb.query(sql,(err,response)=>{
         if (err) throw err 
         res.json({status : "success"});
@@ -50,11 +47,8 @@ app.get('/getListPower', (req,res)=> {
     now.setSeconds(0);
    
     let sql = 'SELECT * FROM power WHERE day >=' + now.getTime();
-    console.log(sql);  
-
     statusDb.query(sql,(err,response)=>{
         if (err) throw err;
-        console.log(response)
         res.json(response);
     })  
 })
