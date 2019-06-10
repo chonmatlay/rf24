@@ -1,6 +1,7 @@
 const mysql = require ('mysql');
 const express = require('express');
 const bodyParser = require('body-parser');
+const mm = require('moment');
 const urlencodedParser = bodyParser.urlencoded({ extended: false })
 const app = express();
 app.listen(3030);
@@ -55,7 +56,8 @@ app.post('/setWarning',urlencodedParser,async (req,res)=>{
     console.log(req.body);
     let now = new Date() ;
     await resetTime(now);
-    let sql ='SELECT SUM(value) FROM power'
+    let today = mm(now.getTime());
+    let sql ='SELECT SUM(value) FROM power WHERE day>= ' + today.format('YYYY-MM-DD HH:mm:ss').toString() +'"';
     statusDb.query(sql,async (err,response)=>{
         if (err) throw err 
         await setWarning(req.body.value , response[0]['SUM(value)'] );
@@ -64,24 +66,41 @@ app.post('/setWarning',urlencodedParser,async (req,res)=>{
     
 })
 app.get('/getListPower', (req,res)=> {
-    let now = new Date();
-    now.setHours(0);
-    now.setMilliseconds(0);
-    now.setMinutes(0);
-    now.setSeconds(0);
+    let now = mm();
+    now.set('hour', 0);
+    now.set('minute', 0);
+    now.set('second', 0);
+    now.set('millisecond', 0);
    
-    let sql = 'SELECT * FROM power WHERE day >=' + now.getTime();
+    let sql = 'SELECT * FROM power WHERE day >="'+now.format('YYYY-MM-DD HH:mm:ss').toString()+'"' ;
     statusDb.query(sql,(err,response)=>{
         if (err) throw err;
         res.json(response);
     })  
 })
 app.get('/getOneListPower',urlencodedParser,(req,res)=>{
-    let time= req.body.time;
-    let next= time + 86400;
-    let sql = 'SELECT * FROM power WHERE day>=' +time + ' AND day <='+next ;
+    let time= mm(Number(req.body.time));
+    console.log(time);
+    let next= mm(Number(req.body.time) + 86400000);
+    let sql = 'SELECT * FROM power WHERE day>="' +time.format('YYYY-MM-DD HH:mm:ss').toString() + '" AND day <="'+next.format('YYYY-MM-DD HH:mm:ss').toString()+'"' ;
     statusDb.query(sql , (err ,response)=> {
         if (err) throw err ;
-        res.json(response);
+        arr=response.map(item=> {return {
+            value : item.value,
+            date : mm(item.day).format('YYYY-MM-DD HH:mm:ss')
+        }})
+        res.json(arr);
+    })
+})
+app.get('/getExtendList',urlencodedParser,(req,res)=>{
+    let time= mm(Number(req.body.time))
+    let sql = 'SELECT * FROM power WHERE day>="' +time.format('YYYY-MM-DD HH:mm:ss').toString()+'"' ;
+    statusDb.query(sql , (err ,response)=> {
+        if (err) throw err ;
+        arr=response.map(item=> {return {
+            value : item.value,
+            date : mm(item.day).format('YYYY-MM-DD HH:mm:ss')
+        }})
+        res.json(arr);
     })
 })
