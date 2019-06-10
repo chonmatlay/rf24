@@ -5,6 +5,7 @@ const mm = require('moment');
 const urlencodedParser = bodyParser.urlencoded({ extended: false })
 const app = express();
 app.listen(3030);
+let arr=[];
 const statusDb= mysql.createConnection({
     host : "localhost",
     user : "root" ,
@@ -104,3 +105,50 @@ app.get('/getExtendList',urlencodedParser,(req,res)=>{
         res.json(arr);
     })
 })
+app.get('/getSome',urlencodedParser,(req,res)=> {
+    let time= mm(Number(req.body.time))
+    let next= mm(Number(req.body.next)+86400000)
+    let sql = 'SELECT * FROM power WHERE day>="' +time.format('YYYY-MM-DD HH:mm:ss').toString()+'" AND day <="'+next.format('YYYY-MM-DD HH:mm:ss').toString() ;
+    statusDb.query(sql , (err ,response)=> {
+        if (err) throw err ;
+        arr=response.map(item=> {return {
+            value : item.value,
+            date : mm(item.day).format('YYYY-MM-DD HH:mm:ss')
+        }})
+        res.json(arr);
+    })
+})
+app.get('/getRecentPower',urlencodedParser,async (req,res)=>{
+    let now =await new Date() ;
+  
+    await resetTime(now);
+    console.log(now);
+    let time =await mm(now.getTime());
+    let first =await new Date();
+    await resetTime(first);
+    await first.setMonth(now.getMonth()-1)
+    console.log(now);
+    console.log(first);
+    let previous =await mm(first.getTime());
+    let sql =await 'SELECT SUM(value) FROM power WHERE day<"' +time.format('YYYY-MM-DD HH:mm:ss').toString()+'" AND day >="'+previous.format('YYYY-MM-DD HH:mm:ss').toString()+'"' ;
+   
+    await statusDb.query(sql,async(err,response)=>{
+        if(err) throw err
+        arr[0]=response[0]['SUM(value)'];
+       //console.log(response);
+       await getVal(arr ,res); 
+      
+    })
+    
+})
+ function getVal(arr,res){
+    let now = new Date() ;
+    resetTime(now);
+    let time = mm(now.getTime());
+    let sql = 'SELECT SUM(value) FROM power WHERE day>="' +time.format('YYYY-MM-DD HH:mm:ss').toString() +'"'
+     statusDb.query(sql,(err,response)=> {
+         console.log(response);
+        arr[1]=response[0]['SUM(value)'];
+        res.json(arr);
+    })
+}
