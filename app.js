@@ -10,6 +10,26 @@ const statusDb= mysql.createConnection({
     password : "password",
     database : "status"
 })
+async function resetTime(time){
+    time.setDate(1);
+    time.setHours(0);
+    time.setMinutes(0);
+    time.setMilliseconds(0);
+    time.setSeconds(0);
+}
+async function setWarning(val,curr ){
+  if (val > curr ){
+      let sql = await 'UPDATE warning SET value='+ val +' , flag=0';
+      await statusDb.query(sql,(err,response)=>{
+          if (err) throw err ;
+      })
+  } else {
+    let sql =await 'UPDATE warning SET value='+ val ;
+    await statusDb.query(sql,(err,response)=>{
+        if (err) throw err ;
+    })
+  }
+}
 app.get('/getAllStatus',(req,res)=> {
     let sql = 'SELECT * FROM status'
     statusDb.query(sql,(err,response)=>{
@@ -31,13 +51,17 @@ app.post('/updateStatus',urlencodedParser,(req,res)=>{
         res.json({status : "success"});
     })
 })
-app.post('/setWarning',urlencodedParser,(req,res)=>{
+app.post('/setWarning',urlencodedParser,async (req,res)=>{
     console.log(req.body);
-    let sql ='UPDATE warning SET value=' +req.body.value ;
-    statusDb.query(sql,(err,response)=>{
+    let now = new Date() ;
+    await resetTime(now);
+    let sql ='SELECT SUM(value) FROM power'
+    statusDb.query(sql,async (err,response)=>{
         if (err) throw err 
-        res.json({status : "success"});
+        await setWarning(req.body.value , response[0]['SUM(value)'] );
+        await res.json({status : "success"});
     })
+    
 })
 app.get('/getListPower', (req,res)=> {
     let now = new Date();
