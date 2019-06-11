@@ -1,11 +1,22 @@
 {
-  "name": "haiz",
+  "name": "api",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC"
+  "repository": "git+ssh://git@github.com/chonmatlay/API.git",
+  "author": "chonmatlay <hungmotlan@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chonmatlay/API/issues"
+  },
+  "homepage": "https://github.com/chonmatlay/API#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "moment": "^2.24.0",
+    "mysql": "^2.17.1"
+  }
 }
